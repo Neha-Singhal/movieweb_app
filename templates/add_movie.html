@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Add Movie - MovieWeb App{% endblock %}
+
+{% block content %}
+    <h1>Add New Movie</h1>
+    <form method="POST" action="{{ url_for('add_movie', user_id=user_id) }}">
+        <div class="form-group">
+            <label for="movie_name">Movie Title:</label>
+            <input type="text" id="movie_name" name="movie_name" required>
+        </div>
+        <button type="submit" class="button">Search Movie</button>
+    </form>
+{% endblock %}

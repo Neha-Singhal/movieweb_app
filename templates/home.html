@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Home - MovieWeb App{% endblock %}
+
+{% block content %}
+    <h1>Welcome to MovieWeb App</h1>
+    <h2>Top 5 Movies</h2>
+    <div class="movie-grid">
+        {% for movie in movies %}
+            <div class="movie-card">
+                <img src="{{ movie.movie_poster }}" alt="{{ movie.movie_name }} poster">
+                <h3>{{ movie.movie_name }} ({{ movie.movie_year }})</h3>
+                <p>Director: {{ movie.movie_director }}</p>
+                <p>Rating: {{ movie.movie_rating }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
