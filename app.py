@@ -3,7 +3,6 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from datamanager.sqlite_data_manager import SQLiteDataManager
-from datamanager.data_models import db
 
 load_dotenv(dotenv_path ='config/.env')
 API_KEY = os.getenv('API_KEY')
@@ -13,25 +12,12 @@ URL = f"http://www.omdbapi.com/?apikey={API_KEY}&t="
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # Generates a random 24-byte secret key
 # Define the SQLite file path
-basedir = os.path.abspath(os.path.dirname(__file__))
-data_dir = os.path.join(basedir, 'data')
-os.makedirs(data_dir, exist_ok=True)
+db_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                       'data', 'moviwebapp.sqlite')
+db_file_name = f'sqlite:///{db_path}'
 
-# Configure SQLite database
-db_path = os.path.join(data_dir, 'moviwebapp.sqlite')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize SQLAlchemy with the app
-db.init_app(app)
 # Initialize the SQLiteDataManager with the app and db_file_name
-data_manager = SQLiteDataManager(db)
-
-# Create tables within application context
-with app.app_context():
-    db.create_all()
-    print(f"Database initialized at: {db_path}")
-
+data_manager = SQLiteDataManager(app, db_file_name)
 
 @app.route('/')
 def home_page():
