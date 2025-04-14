@@ -1,6 +1,8 @@
 from sqlalchemy.exc import SQLAlchemyError
-from .data_manager_interface import DataManagerInterface
-from .data_models import User, Movie, db
+from  .data_manager_interface import DataManagerInterface
+from .data_models import User, Movie, db, Review
+from sqlalchemy.orm import joinedload
+
 
 class SQLiteDataManager(DataManagerInterface):
     """The SQLiteDataManager is the  implementation of the DataManagerInterface"""
@@ -17,6 +19,7 @@ class SQLiteDataManager(DataManagerInterface):
 
         # Create the tables if they don't already exist
         with app.app_context():
+
             db.create_all()
 
     def get_all_users(self):
@@ -35,18 +38,19 @@ class SQLiteDataManager(DataManagerInterface):
 
     def get_user_movies(self, user_id):
         """
-        Query to fetch movies for a specific user
+        Query to fetch movies for a specific user,includind reviews and reviews authors
         """
         try:
             with self.app.app_context():
-                movies = Movie.query.filter_by(user_id = user_id).all()
+                movies = Movie.query.filter_by(user_id = user_id).options(
+                    joinedload(Movie.reviews).joinedload(Review.user)).all()
             return movies
         except SQLAlchemyError as e:
             db.session.rollback()
             print(f"Data base error to get movies: {e}")
             return []
 
-    def get_movie_by_id(self, movie_id):
+    def get_movie(self, movie_id):
         """
         Query to fetch a single movie by movie_id
         """
@@ -59,7 +63,7 @@ class SQLiteDataManager(DataManagerInterface):
         except SQLAlchemyError as e:
             db.session.rollback()
             print(f"Data base error to get movies for {movie_id} : {e}")
-            return []
+            return None
 
     def add_user(self, user_name):
         """
@@ -148,3 +152,32 @@ class SQLiteDataManager(DataManagerInterface):
         with self.app.app_context():
             movies = Movie.query.order_by(Movie.movie_rating.desc()).limit(5).all()
         return movies
+
+    def add_review(self, user_id, movie_id, review_text, review_rating):
+        try:
+            with self.app.app_context():
+                print("Inside add_review in SQLiteDataManager")
+                new_review = Review(
+                    user_id=user_id,
+                    movie_id=movie_id,
+                    review_text=review_text,
+                    review_rating=review_rating
+                )
+                db.session.add(new_review)
+                db.session.commit()
+                print(f"Review added to DB: {new_review}")
+                return new_review
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            print(f"Database error adding review: {e}")
+            return None
+
+    def get_reviews_for_movie(self, movie_id):
+        try:
+            with self.app.app_context():
+                return Review.query.filter_by(movie_id=movie_id).all()
+        except SQLAlchemyError as e:
+            print(f"Error fetching reviews:{e}")
+            return []
+
+

@@ -68,66 +68,65 @@ def add_user():
     return render_template('add_user.html')
 
 
-@app.route('/users/<user_id>/add_movie', methods =['GET', 'POST'])
+@app.route('/users/<user_id>/add_movie', methods=['GET', 'POST'])
 def add_movie(user_id):
     """
     This route will display add_movie.html form to add a new movie to a
     user’s list of favorite movies.
     """
-    if request.method == 'POST':
-        # Get the movie name from the form
-        movie_name = request.form['movie_name']
+    user_id = int(user_id)  # Ensure it's an integer
 
-        # Build the full URL to fetch movie details
+    if request.method == 'POST':
+        movie_name = request.form['movie_name']
         movie_url = f"{URL}{movie_name}"
 
-        # Fetch movie details from OMDb API
-        response = requests.get(movie_url, timeout=10)  # Set a timeout
-        response.raise_for_status()
-        movie_data = response.json()
-
         try:
-            # Check if the movie data is valid
+            response = requests.get(movie_url, timeout=10)
+            response.raise_for_status()
+            movie_data = response.json()
+
             if movie_data['Response'] == 'True':
-                # Extract relevant movie details
                 movie_title = movie_data.get('Title')
-                movie_year = int(movie_data.get('Year'))
+                movie_year_str = movie_data.get('Year')
                 movie_director = movie_data.get('Director')
-                movie_rating = float(movie_data.get('imdbRating'))
+                movie_rating_str = movie_data.get('imdbRating')
                 movie_poster = movie_data.get('Poster')
 
-                # Use the data manager to add the movie to the database
-                movie = data_manager.add_movie(
-                    user_id = user_id,
-                    movie_name = movie_title,
-                    movie_director = movie_director,
-                    movie_year = movie_year,
-                    movie_rating = movie_rating,
-                    movie_poster = movie_poster
-                )
-                if movie is None:
-                    # Either movie already exists or database error
-                    flash(f"Movie'{movie_name}' already"
-                          f" exists or an error occurred. Please try again.")
+                if movie_year_str == 'N/A' or movie_rating_str == 'N/A':
+                    flash("Movie year or rating is not available. Cannot add this movie.", "error")
+                    return render_template('add_movie.html', user_id=user_id)
 
-                flash('Movie added successfully!', 'success')
-                return redirect(url_for('user_movies', user_id = user_id))
+                movie_year = int(movie_year_str)
+                movie_rating = float(movie_rating_str)
+
+                movie = data_manager.add_movie(
+                    user_id=user_id,
+                    movie_name=movie_title,
+                    movie_director=movie_director,
+                    movie_year=movie_year,
+                    movie_rating=movie_rating,
+                    movie_poster=movie_poster
+                )
+
+                if movie is None:
+                    flash(f"Movie '{movie_name}' already exists or an error occurred. Please try again.", 'error')
+                else:
+                    flash('Movie added successfully!', 'success')
+                    return redirect(url_for('user_movies', user_id=user_id))
+
             else:
                 flash('Movie not found or invalid data!', 'error')
 
+        except requests.exceptions.Timeout:
+            flash("The request to OMDb API timed out. Please try again later.", "error")
         except requests.exceptions.HTTPError as http_err:
             print(f"HTTP error occurred: {http_err}")
-
-        except requests.exceptions.Timeout:
-            flash("The request to OMDb API timed out."
-                  " Please try again later.", "error")
         except requests.exceptions.RequestException as req_err:
-            print(f"Error occurred while making the request: {req_err}")
-
+            print(f"Request error: {req_err}")
         except Exception as err:
-            print(f"An unexpected error occurred: {err}")
+            print(f"Unexpected error: {err}")
 
-    return render_template('add_movie.html', user_id = user_id)
+    return render_template('add_movie.html', user_id=user_id)
 
 
 @app.route('/users/<user_id>/update_movie/<movie_id>',methods = ['GET', 'POST'] )
@@ -167,6 +166,29 @@ def delete_movie(user_id, movie_id):
     flash(f"Movie deleted successfully!", "success")
     return redirect(url_for('user_movies', user_id = user_id))
 
+
+
+@app.route('/<int:user_id>/movies/<int:movie_id>/add_review', methods=['GET','POST'])
+def add_review(user_id, movie_id):
+    if request.method == 'POST':
+        try:
+            review_text = request.form['review_text']
+            review_rating = float(request.form['review_rating'].replace(',', '.'))
+            data_manager.add_review(user_id, movie_id, review_text, review_rating)
+            flash("Review added successfully!")
+            return redirect(url_for('movie_detail', user_id=user_id, movie_id=movie_id))
+        except Exception as e:
+            flash(f"Error: {e}")
+            print("Error submitting review:", e)
+
+    return render_template('add_reviews.html', user_id=user_id, movie_id=movie_id)
+
+
+@app.route('/<int:user_id>/movies/<int:movie_id>')
+def movie_detail(user_id, movie_id):
+    movie = data_manager.get_movie(movie_id)
+    reviews = data_manager.get_reviews_for_movie(movie_id)
+    return render_template('movie_detail.html', user_id=user_id, movie=movie, reviews=reviews)
 
 @app.errorhandler(404)
 def page_not_found(e):

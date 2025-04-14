@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Add Review{% endblock %}
+
+{% block content %}
+<h2>Add Review</h2>
+<form method="POST" action="">
+  <lable for="review_text">Review:</lable><br>
+  <textarea name="review_text" required></textarea><br>
+
+  <lable for="review rating">Rating (0.0 to 10.0):</lable><br>
+  <input type="number" name="review_rating" step="0.1" min="0" max="10" required><br><br>
+
+  <input type="submit" value="Submit Review">
+</form>
+{% endblock %}

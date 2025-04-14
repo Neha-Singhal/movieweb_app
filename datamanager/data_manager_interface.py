@@ -17,7 +17,7 @@ class DataManagerInterface(ABC):
         pass
 
     @abstractmethod
-    def get_movie_by_id(self, movie_id):
+    def get_movie(self, movie_id):
         """
         Abstract method to movie for the user.
         """
@@ -58,4 +58,9 @@ class DataManagerInterface(ABC):
         """
         Abstract method filter  best movies.
         """
+        pass
+
+    @abstractmethod
+    def add_review(self):
+
         pass

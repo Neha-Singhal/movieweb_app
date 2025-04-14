@@ -1,6 +1,8 @@
 from enum import unique
-
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship
 
 # Initialize the SQLAlchemy object
 db = SQLAlchemy()
@@ -44,3 +46,24 @@ class Movie(db.Model):
         Returns a string representation of the Movie object.
         """
         return f"Movie(id={self.movie_id}, movie_name={self.movie_name})"
+
+
+class Review(db.Model):
+    __tablename__ = 'reviews'
+
+    reviews_id = db.Column(db.Integer, primary_key=True)
+
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'), nullable=False)
+
+    review_text = db.Column(db.Text, nullable=False)
+    review_rating = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', backref='reviews')
+    movie = db.relationship('Movie', backref='reviews')
+
+    def __repr__(self):
+        return f"<Review {self.review_rating}/10 for movie_id={self.movie_id}>"
