@@ -129,13 +129,13 @@ def add_movie(user_id):
     return render_template('add_movie.html', user_id=user_id)
 
 
-@app.route('/users/<user_id>/update_movie/<movie_id>',methods = ['GET', 'POST'] )
+@app.route('/users/<int:user_id>/update_movie/<int:movie_id>',methods = ['GET', 'POST'] )
 def update_movie(user_id,movie_id ):
     """
     This route will display update_movie.html form allowing for the updating of details
     of a specific movie in a user’s list.
     """
-    movie = data_manager.get_movie_by_id(movie_id)  # Fetch movies for a specific user
+    movie = data_manager.get_movie(movie_id)  # Fetch movies for a specific user
 
     if not movie:
         flash("Movie not found!", "error")

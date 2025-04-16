@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1>Update Movie</h1>
-    <form method="POST" action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.id) }}">
+    <form method="POST" action="{{ url_for('update_movie', user_id=user_id, movie_id=movie.movie_id) }}">
         <div class="form-group">
             <label for="movie_name">Title:</label>
             <input type="text" id="movie_name" name="movie_name" value="{{ movie.movie_name }}" required>

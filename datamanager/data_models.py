@@ -16,6 +16,7 @@ class User(db.Model):
     user_name = db.Column(db.String, unique=True)
 
     movies = db.relationship('Movie', back_populates='user', lazy=True)
+    reviews = db.relationship('Review', back_populates='user', cascade='all, delete-orphan', passive_deletes=True)
 
     def __repr__(self):
         """
@@ -40,6 +41,9 @@ class Movie(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
     # Define the relationship explicitly with back_populates
     user = db.relationship('User', back_populates='movies', lazy=True)
+    reviews = db.relationship('Review', back_populates='movie', cascade="all, delete-orphan",
+    passive_deletes=True)
+
 
     def __repr__(self):
         """
@@ -49,21 +53,20 @@ class Movie(db.Model):
 
 
 class Review(db.Model):
+    """Represent a review in database"""
     __tablename__ = 'reviews'
 
     reviews_id = db.Column(db.Integer, primary_key=True)
-
-
     user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), nullable=False)
-    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id'), nullable=False)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.movie_id',ondelete='CASCADE'), nullable=False)
 
     review_text = db.Column(db.Text, nullable=False)
     review_rating = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    user = db.relationship('User', backref='reviews')
-    movie = db.relationship('Movie', backref='reviews')
+    user = db.relationship('User', back_populates='reviews')
+    movie = db.relationship('Movie', back_populates='reviews')
 
     def __repr__(self):
         return f"<Review {self.review_rating}/10 for movie_id={self.movie_id}>"
